@@ -22,9 +22,9 @@ export default function Navbar() {
         {/* Logo Section */}
         <div className="flex items-center">
           <img 
-            src="/logo-admin.png" 
-            alt="Logo" 
-            className="h-10 md:h-12 w-auto border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-[#C1EBE9] p-1.5 object-contain"
+            src="/logo/logo_converted.gif" 
+            alt="Logo Animasi" 
+            className="h-10 md:h-14 w-32 md:w-48 border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] object-cover object-center"
           />
         </div>
 
