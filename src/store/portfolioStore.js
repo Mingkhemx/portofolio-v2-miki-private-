@@ -66,6 +66,13 @@ export const usePortfolioStore = create(
         { id: 2, type: 'Email', value: 'adansyah225@gmail.com', link: 'mailto:adansyah225@gmail.com' },
         { id: 3, type: 'Telepon', value: '+62 89677121092', link: 'tel:+6289677121092' }
       ],
+      socials: [
+        { id: 1, platform: 'GitHub', username: 'Mingkhemx', link: 'https://github.com/Mingkhemx', color: 'bg-[#3B82F6]' },
+        { id: 2, platform: 'LinkedIn', username: 'adansyah', link: 'https://linkedin.com/in/adansyah', color: 'bg-[#8B5CF6]' },
+        { id: 3, platform: 'Instagram', username: 'adansyah__', link: 'https://instagram.com/adansyah__', color: 'bg-[#FF007A]' },
+        { id: 4, platform: 'TikTok', username: 'developerbiasa_', link: 'https://tiktok.com/@developerbiasa_', color: 'bg-black' },
+        { id: 5, platform: 'WhatsApp', username: '6289677121092', link: 'https://wa.me/6289677121092', color: 'bg-[#00FF75]' }
+      ],
       songs: [
         { id: 1, title: 'Lofi Coding Beats', artist: 'Migwara Records', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', duration: 372, color: 'bg-[#FF007A]', tempo_speed: 350 },
         { id: 2, title: 'Retro Synthwave', artist: '80s Cyber Vibe', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', duration: 423, color: 'bg-[#00FF75]', tempo_speed: 120 },
@@ -79,6 +86,7 @@ export const usePortfolioStore = create(
           const { data: skillsData } = await supabase.from('skills').select('*').order('id');
           const { data: certsData } = await supabase.from('certificates').select('*').order('id');
           const { data: contactsData } = await supabase.from('contacts').select('*').order('id');
+          const { data: socialsData } = await supabase.from('socials').select('*').order('id');
           const { data: projectsData } = await supabase.from('projects').select('*');
           const { data: highlightsData } = await supabase.from('highlights').select('*');
           const { data: songsData } = await supabase.from('songs').select('*').order('id');
@@ -95,6 +103,7 @@ export const usePortfolioStore = create(
             skills: skillsData && skillsData.length > 0 ? skillsData : get().skills,
             certificates: certsData && certsData.length > 0 ? certsData : get().certificates,
             contacts: contactsData && contactsData.length > 0 ? contactsData : get().contacts,
+            socials: socialsData && socialsData.length > 0 ? socialsData : get().socials,
             projects: projectsData && projectsData.length > 0 ? projectsData.map(mapProjectFromDB) : get().projects,
             highlights: highlightsData ? highlightsData.map(h => h.project_title) : get().highlights,
             songs: songsData && songsData.length > 0 ? songsData : get().songs,
@@ -122,6 +131,10 @@ export const usePortfolioStore = create(
           // Seed contacts
           if (state.contacts.length > 0) {
             await supabase.from('contacts').upsert(state.contacts.map(c => ({ id: c.id, type: c.type, value: c.value, link: c.link })));
+          }
+          // Seed socials
+          if (state.socials.length > 0) {
+            await supabase.from('socials').upsert(state.socials);
           }
           // Seed projects
           if (state.projects.length > 0) {
@@ -277,6 +290,32 @@ export const usePortfolioStore = create(
           set({ highlights: newHighlights });
         } catch (err) {
           console.error('Error toggling highlight in Supabase:', err);
+        }
+      },
+
+      updateSocials: async (newSocials) => {
+        set({ socials: newSocials });
+        try {
+          // Sinkronisasi dengan Supabase: Hapus yang tidak ada di newSocials
+          const { data: currentDbSocials } = await supabase.from('socials').select('id');
+          if (currentDbSocials) {
+            const obsolete = currentDbSocials.filter(c => !newSocials.some(n => Number(n.id) === Number(c.id)));
+            for (const item of obsolete) {
+              await supabase.from('socials').delete().eq('id', item.id);
+            }
+          }
+          // Upsert data terbaru/diubah
+          if (newSocials.length > 0) {
+            await supabase.from('socials').upsert(newSocials.map(s => ({
+              id: s.id,
+              platform: s.platform,
+              username: s.username,
+              link: s.link,
+              color: s.color
+            })));
+          }
+        } catch (err) {
+          console.error('Error updating socials in Supabase:', err);
         }
       },
     }),

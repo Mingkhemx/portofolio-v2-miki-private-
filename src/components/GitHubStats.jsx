@@ -8,7 +8,7 @@ import { GoGitCommit } from "react-icons/go";
 
 export default function GitHubStats() {
   const username = "Mingkhemx"; // GitHub Username Dinamis Anda
-  
+
   // State untuk menyimpan data statistik GitHub asli
   const [gitHubData, setGitHubData] = useState({
     publicRepos: 29,  // Fallback awal
@@ -57,32 +57,32 @@ export default function GitHubStats() {
   }, []);
 
   const stats = [
-    { 
-      label: "REPOSITORI", 
-      value: loading ? "..." : gitHubData.publicRepos, 
-      desc: "REPOSITORI PUBLIK", 
-      color: "bg-white", 
+    {
+      label: "REPOSITORI",
+      value: loading ? "..." : gitHubData.publicRepos,
+      desc: "REPOSITORI PUBLIK",
+      color: "bg-white",
       icon: <FaCodeBranch size={24} className="text-green-600" />
     },
-    { 
-      label: "BINTANG", 
-      value: loading ? "..." : gitHubData.stars, 
-      desc: "BINTANG DITERIMA", 
-      color: "bg-yellow-400", 
+    {
+      label: "BINTANG",
+      value: loading ? "..." : gitHubData.stars,
+      desc: "BINTANG DITERIMA",
+      color: "bg-yellow-400",
       icon: <FaStar size={24} className="text-yellow-600" />
     },
-    { 
-      label: "ESTIMASI KONTRIBUSI", 
-      value: loading ? "..." : gitHubData.contributions, 
-      desc: "SATU TAHUN TERAKHIR", 
-      color: "bg-[#00FF75]", 
+    {
+      label: "ESTIMASI KONTRIBUSI",
+      value: loading ? "..." : gitHubData.contributions,
+      desc: "SATU TAHUN TERAKHIR",
+      color: "bg-[#00FF75]",
       icon: <GoGitCommit size={24} className="text-blue-500" />
     },
-    { 
-      label: "PENGIKUT", 
-      value: loading ? "..." : gitHubData.followers, 
-      desc: "PENGIKUT GITHUB", 
-      color: "bg-[#8B5CF6]", 
+    {
+      label: "PENGIKUT",
+      value: loading ? "..." : gitHubData.followers,
+      desc: "PENGIKUT GITHUB",
+      color: "bg-[#8B5CF6]",
       icon: <FaUsers size={24} className="text-white" />
     },
   ];
@@ -90,7 +90,7 @@ export default function GitHubStats() {
   return (
     <section id="github" className="py-20 bg-[#E9D5FF] border-b-4 border-black overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
-        
+
         <div className="flex justify-center mb-12" data-aos="zoom-in">
           <h2 className="text-2xl md:text-4xl font-black bg-[#3B82F6] text-white px-10 py-3 border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] uppercase">
             Statistik GitHub
@@ -98,14 +98,14 @@ export default function GitHubStats() {
         </div>
 
         {/* Contribution Chart Dinamis sesuai username Anda */}
-        <div 
+        <div
           className="bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-6 mb-12 overflow-hidden"
           data-aos="fade-up"
         >
           <div className="w-full flex flex-col items-center justify-center">
             <p className="font-bold text-xs uppercase mb-3 text-gray-500">Grafik Kontribusi GitHub ({username})</p>
-            <img 
-              src={`https://ghchart.rshah.org/00FF75/${username}`} 
+            <img
+              src={`https://ghchart.rshah.org/00FF75/${username}`}
               alt="GitHub Contribution Graph"
               className="w-full h-auto max-w-4xl"
             />
@@ -114,7 +114,7 @@ export default function GitHubStats() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {stats.map((item, index) => (
-            <div 
+            <div
               key={index}
               data-aos="flip-left"
               data-aos-delay={index * 150}
@@ -128,7 +128,7 @@ export default function GitHubStats() {
                   {item.icon}
                 </div>
               </div>
-              
+
               <div className="mt-auto">
                 <span className="text-4xl md:text-5xl font-black block mb-1">
                   {item.value}

@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { usePortfolioStore } from '../store/portfolioStore';
 import { useEffect, useState } from 'react';
-import { FaHome, FaProjectDiagram, FaTools, FaEnvelope, FaSignOutAlt, FaUserEdit, FaInfoCircle, FaAward, FaPhoneAlt, FaTrash, FaMusic } from 'react-icons/fa';
+import { FaHome, FaProjectDiagram, FaTools, FaEnvelope, FaSignOutAlt, FaUserEdit, FaInfoCircle, FaAward, FaPhoneAlt, FaTrash, FaMusic, FaShareAlt } from 'react-icons/fa';
 import { projects } from '../data/projects';
 import { supabase } from '../supabaseClient';
 import { ToastContainer, toast } from 'react-toastify';
@@ -18,7 +18,8 @@ export default function AdminDashboard() {
     projects, updateProjects, 
     certificates, updateCertificates, 
     contacts, updateContacts,
-    songs, updateSongs 
+    songs, updateSongs,
+    socials, updateSocials
   } = usePortfolioStore();
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [editingProject, setEditingProject] = useState(null);
@@ -27,6 +28,8 @@ export default function AdminDashboard() {
   const [isAddingCert, setIsAddingCert] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
   const [isAddingContact, setIsAddingContact] = useState(false);
+  const [editingSocial, setEditingSocial] = useState(null);
+  const [isAddingSocial, setIsAddingSocial] = useState(false);
   const [editingSong, setEditingSong] = useState(null);
   const [isAddingSong, setIsAddingSong] = useState(false);
   const [confirmModal, setConfirmModal] = useState({
@@ -1121,6 +1124,176 @@ export default function AdminDashboard() {
             </div>
           </div>
         );
+      case 'Kelola Medsos':
+        if (editingSocial || isAddingSocial) {
+          const socialData = editingSocial || {
+            id: Date.now(),
+            platform: 'GitHub',
+            username: '',
+            link: '',
+            color: 'bg-[#3B82F6]'
+          };
+          const platforms = ['GitHub', 'LinkedIn', 'Instagram', 'TikTok', 'WhatsApp', 'YouTube', 'Facebook', 'Twitter', 'Lainnya'];
+          const defaultColors = [
+            { name: 'Blue (GitHub/FB)', value: 'bg-[#3B82F6]' },
+            { name: 'Purple (LinkedIn)', value: 'bg-[#8B5CF6]' },
+            { name: 'Pink (Instagram)', value: 'bg-[#FF007A]' },
+            { name: 'Black (TikTok)', value: 'bg-black' },
+            { name: 'Green (WhatsApp)', value: 'bg-[#00FF75]' },
+            { name: 'Red (YouTube)', value: 'bg-[#FF0000]' },
+            { name: 'Cyan (Twitter/X)', value: 'bg-[#1DA1F2]' },
+            { name: 'Orange', value: 'bg-orange-500' },
+            { name: 'Yellow', value: 'bg-yellow-400' }
+          ];
+
+          return (
+            <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+              <h2 className="text-2xl font-black uppercase mb-6">{isAddingSocial ? 'Tambah Medsos Baru' : 'Edit Medsos'}</h2>
+              <div className="space-y-4 font-bold">
+                <div>
+                  <label className="block mb-2">Platform Sosial Media</label>
+                  <select 
+                    value={socialData.platform}
+                    onChange={e => setEditingSocial({...socialData, platform: e.target.value})}
+                    className="w-full bg-[#F4F4F5] border-4 border-black p-3 font-black focus:outline-none"
+                  >
+                    {platforms.map(p => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block mb-2">Username / Nomor Kontak</label>
+                  <input 
+                    type="text" 
+                    value={socialData.username} 
+                    onChange={e => setEditingSocial({...socialData, username: e.target.value})} 
+                    className="w-full bg-[#F4F4F5] border-4 border-black p-3 focus:outline-none focus:bg-[#E9D5FF]" 
+                    placeholder="Masukkan username atau nomor..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-2">Tautan URL Medsos (Lengkap dengan https://)</label>
+                  <input 
+                    type="text" 
+                    value={socialData.link} 
+                    onChange={e => setEditingSocial({...socialData, link: e.target.value})} 
+                    className="w-full bg-[#F4F4F5] border-4 border-black p-3 focus:outline-none focus:bg-[#E9D5FF]" 
+                    placeholder="https://github.com/username..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-2">Warna Background Kartu Medsos</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {defaultColors.map(c => (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => setEditingSocial({...socialData, color: c.value})}
+                        className={`flex items-center gap-2 p-2 border-2 border-black font-bold text-xs capitalize transition-all ${c.value === socialData.color ? 'ring-4 ring-black scale-95' : ''}`}
+                      >
+                        <span className={`w-4 h-4 rounded-full border border-black inline-block ${c.value}`}></span>
+                        <span className={c.value === 'bg-black' ? 'text-black' : ''}>{c.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <button 
+                    onClick={() => {
+                      if (!socialData.username || !socialData.link) {
+                        toast.warn('Mohon masukkan Username dan Tautan!');
+                        return;
+                      }
+                      if (isAddingSocial) {
+                        updateSocials([...(socials || []), socialData]);
+                        toast.success('Medsos baru berhasil ditambahkan!');
+                      } else {
+                        updateSocials((socials || []).map(s => s.id === socialData.id ? socialData : s));
+                        toast.success('Data Medsos berhasil diperbarui!');
+                      }
+                      setEditingSocial(null);
+                      setIsAddingSocial(false);
+                    }} 
+                    className="flex-1 bg-[#00FF75] font-black uppercase py-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+                  >
+                    Simpan Medsos
+                  </button>
+                  <button 
+                    onClick={() => { setEditingSocial(null); setIsAddingSocial(false); }} 
+                    className="flex-1 bg-gray-300 font-black uppercase py-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+                  >
+                    Batal
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        }
+        
+        return (
+          <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-black uppercase">Kelola Medsos</h2>
+              <button 
+                onClick={() => setIsAddingSocial(true)} 
+                className="bg-yellow-400 font-black border-4 border-black px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+              >
+                + Tambah Medsos
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {(socials || []).map((item) => (
+                <div key={item.id} className="border-4 border-black p-4 bg-[#F4F4F5] flex flex-col justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className={`w-8 h-8 rounded-full border-2 border-black inline-flex items-center justify-center text-white ${item.color || 'bg-black'} font-black uppercase text-xs`}>
+                      {item.platform.slice(0,2)}
+                    </span>
+                    <div>
+                      <h4 className="font-black text-lg">{item.platform}</h4>
+                      <p className="text-sm font-bold text-gray-500">@{item.username}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="text-xs font-bold text-blue-600 truncate mb-4">
+                    <a href={item.link} target="_blank" rel="noopener noreferrer" className="hover:underline">{item.link}</a>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setEditingSocial(item)} 
+                      className="px-3 py-1.5 font-black uppercase border-2 border-black bg-yellow-300 hover:bg-yellow-400 transition-colors text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px]"
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setConfirmModal({
+                          isOpen: true,
+                          title: 'Hapus Medsos',
+                          message: `Apakah Anda yakin ingin menghapus media sosial ${item.platform} (${item.username})?`,
+                          onConfirm: async () => {
+                            const newSocials = socials.filter(s => s.id !== item.id);
+                            await updateSocials(newSocials);
+                            toast.success('Medsos berhasil dihapus!');
+                          }
+                        });
+                      }}
+                      className="px-3 py-1.5 font-black uppercase border-2 border-black bg-[#FF007A] text-white hover:bg-red-600 transition-colors text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px]"
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
       default:
         return null;
     }
@@ -1134,6 +1307,7 @@ export default function AdminDashboard() {
     { name: 'Kelola Keahlian', icon: <FaTools size={20} /> },
     { name: 'Kelola Sertifikat', icon: <FaAward size={20} /> },
     { name: 'Kelola Kontak', icon: <FaPhoneAlt size={20} /> },
+    { name: 'Kelola Medsos', icon: <FaShareAlt size={20} /> },
     { name: 'Kelola Musik', icon: <FaMusic size={20} /> },
     { name: 'Pesan Masuk', icon: <FaEnvelope size={20} /> },
   ];
