@@ -57,7 +57,7 @@ export default function ProjectCard({ project, compact = false }) {
         <h3 className="text-2xl font-black uppercase mb-2 text-center">{project.title}</h3>
         {!compact && (
           <>
-            <p className="font-bold text-sm text-gray-700 mb-4 flex-1">
+            <p className="font-bold text-sm text-gray-700 mb-4 flex-1 line-clamp-4">
               {project.description}
             </p>
             
