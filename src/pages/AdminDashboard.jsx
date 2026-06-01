@@ -7,6 +7,46 @@ import { projects } from '../data/projects';
 import { supabase } from '../supabaseClient';
 import { ToastContainer, toast } from 'react-toastify';
 
+const SkillItem = ({ skill, idx, skills, updateSkills }) => {
+  const [name, setName] = useState(skill.name);
+  
+  useEffect(() => {
+    setName(skill.name);
+  }, [skill.name]);
+
+  return (
+    <div className="border-4 border-black p-4 flex flex-col items-center justify-center bg-[#F4F4F5] relative group">
+      <div className="h-16 w-16 flex items-center justify-center mb-3">
+        <img src={skill.image} alt={skill.name} className="max-h-full max-w-full object-contain drop-shadow-md" />
+      </div>
+      <input 
+        type="text" 
+        value={name}
+        onChange={(e) => setName(e.target.value.toUpperCase())}
+        onBlur={() => {
+          if (name !== skill.name) {
+            const newSkills = skills.map((s, i) => i === idx ? { ...s, name } : s);
+            updateSkills(newSkills);
+            toast.success('Nama keahlian berhasil diperbarui!');
+          }
+        }}
+        className="w-full text-center font-black text-sm border-2 border-black px-1 py-1 focus:outline-none focus:bg-white"
+      />
+      <button 
+        onClick={() => {
+          const newSkills = skills.filter((_, i) => i !== idx);
+          updateSkills(newSkills);
+          toast.success('Keahlian berhasil dihapus!');
+        }}
+        className="absolute -top-3 -right-3 bg-[#FF007A] text-white w-8 h-8 font-black border-4 border-black md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:scale-110 flex items-center justify-center"
+        title="Hapus Keahlian"
+      >
+        X
+      </button>
+    </div>
+  );
+};
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuthStore();
@@ -374,31 +414,7 @@ export default function AdminDashboard() {
             <h2 className="text-2xl font-black uppercase mb-6">Kelola Keahlian (Tech Stack)</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
               {skills.map((skill, idx) => (
-                <div key={skill.id || idx} className="border-4 border-black p-4 flex flex-col items-center justify-center bg-[#F4F4F5] relative group">
-                  <div className="h-16 w-16 flex items-center justify-center mb-3">
-                    <img src={skill.image} alt={skill.name} className="max-h-full max-w-full object-contain drop-shadow-md" />
-                  </div>
-                  <input 
-                    type="text" 
-                    value={skill.name}
-                    onChange={(e) => {
-                      const newSkills = [...skills];
-                      newSkills[idx].name = e.target.value.toUpperCase();
-                      updateSkills(newSkills);
-                    }}
-                    className="w-full text-center font-black text-sm border-2 border-black px-1 py-1 focus:outline-none focus:bg-white"
-                  />
-                  <button 
-                    onClick={() => {
-                      const newSkills = skills.filter((_, i) => i !== idx);
-                      updateSkills(newSkills);
-                    }}
-                    className="absolute -top-3 -right-3 bg-[#FF007A] text-white w-8 h-8 font-black border-4 border-black md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:scale-110 flex items-center justify-center"
-                    title="Hapus Keahlian"
-                  >
-                    X
-                  </button>
-                </div>
+                <SkillItem key={skill.id || idx} skill={skill} idx={idx} skills={skills} updateSkills={updateSkills} />
               ))}
             </div>
             
@@ -409,15 +425,18 @@ export default function AdminDashboard() {
                 <input 
                   type="file" 
                   accept="image/*"
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const file = e.target.files[0];
                     if (file) {
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        const newSkills = [...skills, { id: Date.now(), name: "SKILL BARU", image: reader.result }];
+                      try {
+                        const url = await handleUploadImageFile(file);
+                        const newSkills = [...skills, { id: Date.now(), name: "SKILL BARU", image: url }];
                         updateSkills(newSkills);
-                      };
-                      reader.readAsDataURL(file);
+                        toast.success('Keahlian baru berhasil ditambahkan!');
+                      } catch (err) {
+                        console.error(err);
+                        toast.error('Gagal mengunggah gambar keahlian.');
+                      }
                     }
                     e.target.value = null;
                   }}
