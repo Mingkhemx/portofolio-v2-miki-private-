@@ -4,7 +4,7 @@ import { usePortfolioStore } from '../store/portfolioStore';
 import { useEffect, useState } from 'react';
 import { FaHome, FaProjectDiagram, FaTools, FaEnvelope, FaSignOutAlt, FaUserEdit, FaInfoCircle, FaAward, FaPhoneAlt, FaTrash, FaMusic, FaShareAlt } from 'react-icons/fa';
 import { projects } from '../data/projects';
-import { supabase } from '../supabaseClient';
+import { fetchMessagesApi, deleteMessageApi, uploadAssetApi } from '../apiClient';
 import { ToastContainer, toast } from 'react-toastify';
 
 const SkillItem = ({ skill, idx, skills, updateSkills }) => {
@@ -81,41 +81,27 @@ export default function AdminDashboard() {
   });
 
   const handleUploadSongFile = async (file) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `songs/${fileName}`;
-
-    toast.info('Sedang mengunggah audio...');
-    const { data, error } = await supabase.storage
-      .from('songs')
-      .upload(filePath, file);
-
-    if (error) throw error;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('songs')
-      .getPublicUrl(filePath);
-
-    return publicUrl;
+    toast.info('Sedang mengunggah audio ke Neon Cloud Storage...');
+    try {
+      const url = await uploadAssetApi(file, 'songs');
+      toast.success('Audio berhasil diunggah ke Neon Cloud Storage!');
+      return url;
+    } catch (err) {
+      toast.error('Gagal mengunggah audio: ' + err.message);
+      throw err;
+    }
   };
 
   const handleUploadImageFile = async (file) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-    const filePath = `images/${fileName}`;
-
-    toast.info('Sedang mengunggah gambar...');
-    const { data, error } = await supabase.storage
-      .from('portfolio')
-      .upload(filePath, file);
-
-    if (error) throw error;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('portfolio')
-      .getPublicUrl(filePath);
-
-    return publicUrl;
+    toast.info('Sedang mengunggah gambar ke Neon Cloud Storage...');
+    try {
+      const url = await uploadAssetApi(file, 'images');
+      toast.success('Gambar berhasil diunggah ke Neon Cloud Storage!');
+      return url;
+    } catch (err) {
+      toast.error('Gagal mengunggah gambar: ' + err.message);
+      throw err;
+    }
   };
 
   const getAudioDuration = (file) => {
@@ -135,11 +121,7 @@ export default function AdminDashboard() {
   const fetchMessages = async () => {
     setLoadingMessages(true);
     try {
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
+      const data = await fetchMessagesApi();
       setMessages(data || []);
     } catch (err) {
       console.error('Error fetching messages:', err);
@@ -156,8 +138,7 @@ export default function AdminDashboard() {
       message: 'Apakah Anda yakin ingin menghapus pesan ini? Tindakan ini tidak dapat dibatalkan.',
       onConfirm: async () => {
         try {
-          const { error } = await supabase.from('messages').delete().eq('id', id);
-          if (error) throw error;
+          await deleteMessageApi(id);
           setMessages(prev => prev.filter(m => m.id !== id));
           toast.success('Pesan berhasil dihapus!');
         } catch (err) {

@@ -1,31 +1,29 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { projects as initialProjects } from '../data/projects';
-import { supabase } from '../supabaseClient';
+import {
+  fetchPortfolioApi,
+  saveHeroApi,
+  saveAboutApi,
+  saveSkillsApi,
+  saveCertificatesApi,
+  saveContactsApi,
+  saveSocialsApi,
+  saveProjectsApi,
+  toggleHighlightApi,
+  saveSongsApi
+} from '../apiClient';
 
 const mapProjectFromDB = (p) => ({
   id: p.id,
   title: p.title,
   description: p.description,
   image: p.image,
-  images: p.images || [],
+  images: Array.isArray(p.images) ? p.images : (typeof p.images === 'string' ? JSON.parse(p.images || '[]') : []),
   video: p.video,
-  sourceCode: p.source_code,
+  sourceCode: p.source_code || p.sourceCode,
   demo: p.demo,
-  tech: p.tech || [],
-  category: p.category
-});
-
-const mapProjectToDB = (p) => ({
-  id: p.id,
-  title: p.title,
-  description: p.description,
-  image: p.image,
-  images: p.images || [],
-  video: p.video,
-  source_code: p.sourceCode,
-  demo: p.demo,
-  tech: p.tech || [],
+  tech: Array.isArray(p.tech) ? p.tech : (typeof p.tech === 'string' ? JSON.parse(p.tech || '[]') : []),
   category: p.category
 });
 
@@ -81,76 +79,21 @@ export const usePortfolioStore = create(
 
       fetchPortfolioData: async () => {
         try {
-          const { data: heroData } = await supabase.from('hero').select('*').eq('id', 1).maybeSingle();
-          const { data: aboutData } = await supabase.from('about').select('*').eq('id', 1).maybeSingle();
-          const { data: skillsData } = await supabase.from('skills').select('*').order('id');
-          const { data: certsData } = await supabase.from('certificates').select('*').order('id');
-          const { data: contactsData } = await supabase.from('contacts').select('*').order('id');
-          const { data: socialsData } = await supabase.from('socials').select('*').order('id');
-          const { data: projectsData } = await supabase.from('projects').select('*');
-          const { data: highlightsData } = await supabase.from('highlights').select('*');
-          const { data: songsData } = await supabase.from('songs').select('*').order('id');
-
-          if (!heroData && !aboutData) {
-            console.log('Supabase data not found, seeding with initial data...');
-            await get().seedSupabase();
-            return;
-          }
+          const data = await fetchPortfolioApi();
 
           set({
-            hero: heroData || get().hero,
-            about: aboutData || get().about,
-            skills: skillsData && skillsData.length > 0 ? skillsData : get().skills,
-            certificates: certsData && certsData.length > 0 ? certsData : get().certificates,
-            contacts: contactsData && contactsData.length > 0 ? contactsData : get().contacts,
-            socials: socialsData && socialsData.length > 0 ? socialsData : get().socials,
-            projects: projectsData && projectsData.length > 0 ? projectsData.map(mapProjectFromDB) : get().projects,
-            highlights: highlightsData ? highlightsData.map(h => h.project_title) : get().highlights,
-            songs: songsData && songsData.length > 0 ? songsData : get().songs,
+            hero: data.hero || get().hero,
+            about: data.about || get().about,
+            skills: data.skills && data.skills.length > 0 ? data.skills : get().skills,
+            certificates: data.certificates && data.certificates.length > 0 ? data.certificates : get().certificates,
+            contacts: data.contacts && data.contacts.length > 0 ? data.contacts : get().contacts,
+            socials: data.socials && data.socials.length > 0 ? data.socials : get().socials,
+            projects: data.projects && data.projects.length > 0 ? data.projects.map(mapProjectFromDB) : get().projects,
+            highlights: data.highlights && data.highlights.length > 0 ? data.highlights : get().highlights,
+            songs: data.songs && data.songs.length > 0 ? data.songs : get().songs,
           });
         } catch (err) {
-          console.error('Error fetching data from Supabase:', err);
-        }
-      },
-
-      seedSupabase: async () => {
-        const state = get();
-        try {
-          // Seed hero
-          await supabase.from('hero').upsert({ id: 1, ...state.hero });
-          // Seed about
-          await supabase.from('about').upsert({ id: 1, ...state.about });
-          // Seed skills
-          if (state.skills.length > 0) {
-            await supabase.from('skills').upsert(state.skills.map(s => ({ id: s.id, name: s.name, image: s.image })));
-          }
-          // Seed certificates
-          if (state.certificates.length > 0) {
-            await supabase.from('certificates').upsert(state.certificates.map(c => ({ id: c.id, title: c.title, image: c.image, color: c.color })));
-          }
-          // Seed contacts
-          if (state.contacts.length > 0) {
-            await supabase.from('contacts').upsert(state.contacts.map(c => ({ id: c.id, type: c.type, value: c.value, link: c.link })));
-          }
-          // Seed socials
-          if (state.socials.length > 0) {
-            await supabase.from('socials').upsert(state.socials);
-          }
-          // Seed projects
-          if (state.projects.length > 0) {
-            await supabase.from('projects').upsert(state.projects.map(mapProjectToDB));
-          }
-          // Seed highlights
-          if (state.highlights.length > 0) {
-            await supabase.from('highlights').upsert(state.highlights.map(h => ({ project_title: h })));
-          }
-          // Seed songs
-          if (state.songs.length > 0) {
-            await supabase.from('songs').upsert(state.songs);
-          }
-          console.log('Seeding Supabase completed successfully!');
-        } catch (err) {
-          console.error('Error seeding Supabase:', err);
+          console.error('Error fetching data from Neon API:', err);
         }
       },
 
@@ -158,9 +101,9 @@ export const usePortfolioStore = create(
         const updatedHero = { ...get().hero, ...newHeroData };
         set({ hero: updatedHero });
         try {
-          await supabase.from('hero').upsert({ id: 1, ...updatedHero });
+          await saveHeroApi(updatedHero);
         } catch (err) {
-          console.error('Error updating hero in Supabase:', err);
+          console.error('Error updating hero in Neon:', err);
         }
       },
 
@@ -168,154 +111,79 @@ export const usePortfolioStore = create(
         const updatedAbout = { ...get().about, ...newAboutData };
         set({ about: updatedAbout });
         try {
-          await supabase.from('about').upsert({ id: 1, ...updatedAbout });
+          await saveAboutApi(updatedAbout);
         } catch (err) {
-          console.error('Error updating about in Supabase:', err);
+          console.error('Error updating about in Neon:', err);
         }
       },
 
       updateSkills: async (newSkills) => {
-        const currentSkills = get().skills;
         set({ skills: newSkills });
         try {
-          const deleted = currentSkills.filter(cs => !newSkills.some(ns => ns.id === cs.id));
-          for (const s of deleted) {
-            await supabase.from('skills').delete().eq('id', s.id);
-          }
-          const addedOrUpdated = newSkills.filter(ns => {
-            const cs = currentSkills.find(item => item.id === ns.id);
-            return !cs || JSON.stringify(cs) !== JSON.stringify(ns);
-          });
-          for (const s of addedOrUpdated) {
-            await supabase.from('skills').upsert({ id: s.id, name: s.name, image: s.image });
-          }
+          await saveSkillsApi(newSkills);
         } catch (err) {
-          console.error('Error syncing skills with Supabase:', err);
+          console.error('Error syncing skills with Neon:', err);
         }
       },
 
       updateProjects: async (newProjects) => {
-        const currentProjects = get().projects;
         set({ projects: newProjects });
         try {
-          const deleted = currentProjects.filter(cp => !newProjects.some(np => np.id === cp.id));
-          for (const p of deleted) {
-            await supabase.from('projects').delete().eq('id', p.id);
-          }
-          const addedOrUpdated = newProjects.filter(np => {
-            const cp = currentProjects.find(item => item.id === np.id);
-            return !cp || JSON.stringify(cp) !== JSON.stringify(np);
-          });
-          for (const p of addedOrUpdated) {
-            await supabase.from('projects').upsert(mapProjectToDB(p));
-          }
+          await saveProjectsApi(newProjects);
         } catch (err) {
-          console.error('Error syncing projects with Supabase:', err);
+          console.error('Error syncing projects with Neon:', err);
         }
       },
 
       updateCertificates: async (newCertificates) => {
-        const currentCerts = get().certificates;
         set({ certificates: newCertificates });
         try {
-          const deleted = currentCerts.filter(cc => !newCertificates.some(nc => nc.id === cc.id));
-          for (const c of deleted) {
-            await supabase.from('certificates').delete().eq('id', c.id);
-          }
-          const addedOrUpdated = newCertificates.filter(nc => {
-            const cc = currentCerts.find(item => item.id === nc.id);
-            return !cc || JSON.stringify(cc) !== JSON.stringify(nc);
-          });
-          for (const c of addedOrUpdated) {
-            await supabase.from('certificates').upsert({ id: c.id, title: c.title, image: c.image, color: c.color });
-          }
+          await saveCertificatesApi(newCertificates);
         } catch (err) {
-          console.error('Error syncing certificates with Supabase:', err);
+          console.error('Error syncing certificates with Neon:', err);
         }
       },
 
       updateContacts: async (newContacts) => {
-        const currentContacts = get().contacts;
         set({ contacts: newContacts });
         try {
-          const deleted = currentContacts.filter(cc => !newContacts.some(nc => nc.id === cc.id));
-          for (const c of deleted) {
-            await supabase.from('contacts').delete().eq('id', c.id);
-          }
-          const addedOrUpdated = newContacts.filter(nc => {
-            const cc = currentContacts.find(item => item.id === nc.id);
-            return !cc || JSON.stringify(cc) !== JSON.stringify(nc);
-          });
-          for (const c of addedOrUpdated) {
-            await supabase.from('contacts').upsert({ id: c.id, type: c.type, value: c.value, link: c.link });
-          }
+          await saveContactsApi(newContacts);
         } catch (err) {
-          console.error('Error syncing contacts with Supabase:', err);
+          console.error('Error syncing contacts with Neon:', err);
         }
       },
 
       updateSongs: async (newSongs) => {
-        const currentSongs = get().songs;
         set({ songs: newSongs });
         try {
-          // Hapus lagu yang dihapus
-          const deleted = currentSongs.filter(cs => !newSongs.some(ns => ns.id === cs.id));
-          for (const s of deleted) {
-            await supabase.from('songs').delete().eq('id', s.id);
-          }
-          // Upsert lagu baru/diubah
-          const addedOrUpdated = newSongs.filter(ns => {
-            const cs = currentSongs.find(item => item.id === ns.id);
-            return !cs || JSON.stringify(cs) !== JSON.stringify(ns);
-          });
-          for (const s of addedOrUpdated) {
-            await supabase.from('songs').upsert(s);
-          }
+          await saveSongsApi(newSongs);
         } catch (err) {
-          console.error('Error syncing songs with Supabase:', err);
+          console.error('Error syncing songs with Neon:', err);
         }
       },
 
       toggleHighlight: async (projectTitle) => {
         const isHighlighted = get().highlights.includes(projectTitle);
-        let newHighlights;
+        const newHighlights = isHighlighted
+          ? get().highlights.filter(t => t !== projectTitle)
+          : [...get().highlights, projectTitle];
+        set({ highlights: newHighlights });
         try {
-          if (isHighlighted) {
-            newHighlights = get().highlights.filter(t => t !== projectTitle);
-            await supabase.from('highlights').delete().eq('project_title', projectTitle);
-          } else {
-            newHighlights = [...get().highlights, projectTitle];
-            await supabase.from('highlights').upsert({ project_title: projectTitle });
+          const res = await toggleHighlightApi(projectTitle);
+          if (res.highlights) {
+            set({ highlights: res.highlights });
           }
-          set({ highlights: newHighlights });
         } catch (err) {
-          console.error('Error toggling highlight in Supabase:', err);
+          console.error('Error toggling highlight in Neon:', err);
         }
       },
 
       updateSocials: async (newSocials) => {
         set({ socials: newSocials });
         try {
-          // Sinkronisasi dengan Supabase: Hapus yang tidak ada di newSocials
-          const { data: currentDbSocials } = await supabase.from('socials').select('id');
-          if (currentDbSocials) {
-            const obsolete = currentDbSocials.filter(c => !newSocials.some(n => Number(n.id) === Number(c.id)));
-            for (const item of obsolete) {
-              await supabase.from('socials').delete().eq('id', item.id);
-            }
-          }
-          // Upsert data terbaru/diubah
-          if (newSocials.length > 0) {
-            await supabase.from('socials').upsert(newSocials.map(s => ({
-              id: s.id,
-              platform: s.platform,
-              username: s.username,
-              link: s.link,
-              color: s.color
-            })));
-          }
+          await saveSocialsApi(newSocials);
         } catch (err) {
-          console.error('Error updating socials in Supabase:', err);
+          console.error('Error updating socials in Neon:', err);
         }
       },
     }),

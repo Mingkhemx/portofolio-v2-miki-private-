@@ -15,7 +15,7 @@ import {
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { usePortfolioStore } from '../store/portfolioStore';
-import { supabase } from '../supabaseClient';
+import { sendMessageApi } from '../apiClient';
 
 const getContactIcon = (type) => {
   switch (type) {
@@ -63,14 +63,12 @@ export default function Contact() {
     const message = formData.get('message');
 
     try {
-      const { error } = await supabase.from('messages').insert({
+      await sendMessageApi({
         name,
         email,
         subject,
         message
       });
-
-      if (error) throw error;
 
       toast.success('Pesan berhasil terkirim dan disimpan!');
       e.target.reset();

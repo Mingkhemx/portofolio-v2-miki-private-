@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase } from '../supabaseClient';
+import { loginApi, checkSessionApi } from '../apiClient';
 
 export const useAuthStore = create((set) => ({
   isAuthenticated: false,
@@ -8,35 +8,36 @@ export const useAuthStore = create((set) => ({
 
   login: async (username, password) => {
     set({ loading: true });
-    
-    // Jika username bukan email (tidak mengandung @), otomatis tambahkan domain default
-    const email = username.includes('@') ? username : `${username}@migwara.my.id`;
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
+    try {
+      const data = await loginApi(username, password);
+      if (data.token) {
+        localStorage.setItem('admin_token', data.token);
+      }
+      set({ isAuthenticated: true, user: data.user, loading: false });
+      return true;
+    } catch (err) {
       set({ loading: false });
-      throw error;
+      throw err;
     }
-
-    set({ isAuthenticated: true, user: data.user, loading: false });
-    return true;
   },
 
   logout: async () => {
-    await supabase.auth.signOut();
-    set({ isAuthenticated: false, user: null });
+    localStorage.removeItem('admin_token');
+    set({ isAuthenticated: false, user: null, loading: false });
   },
 
   checkSession: async () => {
     set({ loading: true });
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      set({ isAuthenticated: true, user: session.user, loading: false });
-    } else {
+    try {
+      const data = await checkSessionApi();
+      if (data.isAuthenticated) {
+        set({ isAuthenticated: true, user: data.user, loading: false });
+      } else {
+        localStorage.removeItem('admin_token');
+        set({ isAuthenticated: false, user: null, loading: false });
+      }
+    } catch {
+      localStorage.removeItem('admin_token');
       set({ isAuthenticated: false, user: null, loading: false });
     }
   },
