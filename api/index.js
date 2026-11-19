@@ -109,6 +109,19 @@ function sendJson(res, statusCode, data) {
   res.end(JSON.stringify(data));
 }
 
+let badgesTableReady = false;
+async function ensureBadgesTable(sql) {
+  if (badgesTableReady) return;
+  await sql.query(`
+    CREATE TABLE IF NOT EXISTS badges (
+      id BIGINT PRIMARY KEY,
+      title TEXT NOT NULL DEFAULT '',
+      image TEXT NOT NULL
+    )
+  `);
+  badgesTableReady = true;
+}
+
 export default async function handler(req, res) {
   // CORS Preflight
   if (req.method === 'OPTIONS') {
@@ -134,11 +147,13 @@ export default async function handler(req, res) {
 
     // 1. PUBLIC: GET /api/portfolio
     if (req.method === 'GET' && (pathname === '/api/portfolio' || pathname === '/portfolio')) {
-      const [heroRows, aboutRows, skillsRows, certsRows, contactsRows, socialsRows, projectsRows, highlightsRows, songsRows] = await Promise.all([
+      await ensureBadgesTable(sql);
+      const [heroRows, aboutRows, skillsRows, certsRows, badgesRows, contactsRows, socialsRows, projectsRows, highlightsRows, songsRows] = await Promise.all([
         sql.query('SELECT * FROM hero WHERE id = 1 LIMIT 1'),
         sql.query('SELECT * FROM about WHERE id = 1 LIMIT 1'),
         sql.query('SELECT * FROM skills ORDER BY id ASC'),
         sql.query('SELECT * FROM certificates ORDER BY id ASC'),
+        sql.query('SELECT * FROM badges ORDER BY id ASC'),
         sql.query('SELECT * FROM contacts ORDER BY id ASC'),
         sql.query('SELECT * FROM socials ORDER BY id ASC'),
         sql.query('SELECT * FROM projects ORDER BY created_at DESC'),
@@ -151,6 +166,7 @@ export default async function handler(req, res) {
         about: aboutRows[0] || null,
         skills: skillsRows || [],
         certificates: certsRows || [],
+        badges: badgesRows || [],
         contacts: contactsRows || [],
         socials: socialsRows || [],
         projects: projectsRows || [],
@@ -282,6 +298,18 @@ export default async function handler(req, res) {
         await sql.query('INSERT INTO certificates (id, title, image, color) VALUES ($1, $2, $3, $4)', [c.id, c.title, c.image, c.color]);
       }
       return sendJson(res, 200, { success: true, certificates: certs });
+    }
+
+    // 10b. ADMIN: POST /api/admin/badges
+    if (req.method === 'POST' && (pathname === '/api/admin/badges' || pathname === '/admin/badges')) {
+      await ensureBadgesTable(sql);
+      const body = await parseBody(req);
+      const badges = Array.isArray(body) ? body : body.badges || [];
+      await sql.query('DELETE FROM badges');
+      for (const b of badges) {
+        await sql.query('INSERT INTO badges (id, title, image) VALUES ($1, $2, $3)', [b.id, b.title || '', b.image]);
+      }
+      return sendJson(res, 200, { success: true, badges });
     }
 
     // 11. ADMIN: POST /api/admin/contacts

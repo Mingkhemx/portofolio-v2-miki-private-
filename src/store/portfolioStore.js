@@ -7,6 +7,7 @@ import {
   saveAboutApi,
   saveSkillsApi,
   saveCertificatesApi,
+  saveBadgesApi,
   saveContactsApi,
   saveSocialsApi,
   saveProjectsApi,
@@ -55,6 +56,7 @@ export const usePortfolioStore = create(
         { id: 6, name: "TAILWIND", image: "https://upload.wikimedia.org/wikipedia/commons/d/d5/Tailwind_CSS_Logo.svg" }
       ],
       certificates: [],
+      badges: [],
       contacts: [
         { id: 1, type: 'Lokasi', value: 'Kopo, Bandung, Indonesia', link: '' },
         { id: 2, type: 'Email', value: 'adansyah225@gmail.com', link: 'mailto:adansyah225@gmail.com' },
@@ -83,6 +85,7 @@ export const usePortfolioStore = create(
             about: data.about || get().about,
             skills: data.skills && data.skills.length > 0 ? data.skills : get().skills,
             certificates: data.certificates && data.certificates.length > 0 ? data.certificates : get().certificates,
+            badges: Array.isArray(data.badges) ? data.badges : get().badges,
             contacts: data.contacts && data.contacts.length > 0 ? data.contacts : get().contacts,
             socials: data.socials && data.socials.length > 0 ? data.socials : get().socials,
             projects: data.projects && data.projects.length > 0 ? data.projects.map(mapProjectFromDB) : get().projects,
@@ -143,6 +146,15 @@ export const usePortfolioStore = create(
           await saveCertificatesApi(newCertificates);
         } catch (err) {
           console.error('Error syncing certificates with Neon:', err);
+        }
+      },
+
+      updateBadges: async (newBadges) => {
+        set({ badges: newBadges });
+        try {
+          await saveBadgesApi(newBadges);
+        } catch (err) {
+          console.error('Error syncing badges with Neon:', err);
         }
       },
 

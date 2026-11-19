@@ -14,6 +14,7 @@ import Projects from './components/Projects.jsx';
 import Skills from './components/Skills.jsx';
 import FullProjects from './components/FullProjects.jsx';
 import Certificates from './components/Certificates.jsx';
+import Badges from './components/Badges.jsx';
 import GitHubStats from './components/GitHubStats.jsx';
 import Contact from './components/Contact.jsx';
 import Footer from './components/Footer.jsx';
@@ -63,6 +64,7 @@ const MainPortfolio = () => {
         <Skills />
         <FullProjects />
         <Certificates />
+        <Badges />
         <GitHubStats />
         <Contact />
         <Footer />

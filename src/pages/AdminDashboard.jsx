@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { usePortfolioStore } from '../store/portfolioStore';
 import { useEffect, useState } from 'react';
-import { FaHome, FaProjectDiagram, FaTools, FaEnvelope, FaSignOutAlt, FaUserEdit, FaInfoCircle, FaAward, FaPhoneAlt, FaTrash, FaMusic, FaShareAlt } from 'react-icons/fa';
+import { FaHome, FaProjectDiagram, FaTools, FaEnvelope, FaSignOutAlt, FaUserEdit, FaInfoCircle, FaAward, FaMedal, FaPhoneAlt, FaTrash, FaMusic, FaShareAlt } from 'react-icons/fa';
 import { projects } from '../data/projects';
 import { fetchMessagesApi, deleteMessageApi, uploadAssetApi } from '../apiClient';
 import { ToastContainer, toast } from 'react-toastify';
@@ -57,6 +57,7 @@ export default function AdminDashboard() {
     skills, updateSkills, 
     projects, updateProjects, 
     certificates, updateCertificates, 
+    badges, updateBadges,
     contacts, updateContacts,
     songs, updateSongs,
     socials, updateSocials
@@ -66,6 +67,8 @@ export default function AdminDashboard() {
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [editingCert, setEditingCert] = useState(null);
   const [isAddingCert, setIsAddingCert] = useState(false);
+  const [editingBadge, setEditingBadge] = useState(null);
+  const [isAddingBadge, setIsAddingBadge] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
   const [isAddingContact, setIsAddingContact] = useState(false);
   const [editingSocial, setEditingSocial] = useState(null);
@@ -778,6 +781,151 @@ export default function AdminDashboard() {
             </div>
           </div>
         );
+      case 'Kelola Badge':
+        if (editingBadge || isAddingBadge) {
+          const badgeData = editingBadge || {
+            id: null,
+            title: '',
+            image: ''
+          };
+          return (
+            <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+              <h2 className="text-2xl font-black uppercase mb-6">{isAddingBadge ? 'Tambah Badge Baru' : 'Edit Badge'}</h2>
+              <div className="space-y-4 font-bold">
+                <div>
+                  <label className="block mb-2">Nama / Judul Badge</label>
+                  <input 
+                    type="text" 
+                    value={badgeData.title} 
+                    onChange={e => setEditingBadge({...badgeData, title: e.target.value})} 
+                    className="w-full bg-[#F4F4F5] border-4 border-black p-3 focus:outline-none focus:bg-[#E9D5FF]" 
+                  />
+                </div>
+                <div>
+                  <label className="block mb-2">Upload File Badge (PNG/JPG/WEBP)</label>
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        try {
+                          const url = await handleUploadImageFile(file);
+                          setEditingBadge({...badgeData, image: url});
+                          toast.success('Badge berhasil diunggah!');
+                        } catch (err) {
+                          console.error(err);
+                          toast.error('Gagal mengunggah badge.');
+                        }
+                      }
+                    }} 
+                    className="w-full border-4 border-black p-2 file:bg-black file:text-white file:border-none file:px-4 file:py-2 file:mr-4 cursor-pointer" 
+                  />
+                  {badgeData.image && (
+                    <div className="mt-4">
+                      <p className="mb-2">Preview Gambar:</p>
+                      <img src={badgeData.image} alt="Preview" className="max-w-xs border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-4 pt-4">
+                  <button 
+                    onClick={() => {
+                      if (!badgeData.image) {
+                        toast.warn('Mohon unggah Gambar Badge terlebih dahulu!');
+                        return;
+                      }
+                      const finalBadge = {
+                        ...badgeData,
+                        id: badgeData.id || Date.now(),
+                        title: badgeData.title || 'Badge'
+                      };
+                      if (isAddingBadge) {
+                        updateBadges([...badges, finalBadge]);
+                        toast.success('Badge berhasil ditambahkan!');
+                      } else {
+                        updateBadges(badges.map(b => b.id === finalBadge.id ? finalBadge : b));
+                        toast.success('Badge berhasil diperbarui!');
+                      }
+                      setEditingBadge(null);
+                      setIsAddingBadge(false);
+                    }} 
+                    className="flex-1 bg-[#00FF75] font-black uppercase py-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+                  >
+                    Simpan Badge
+                  </button>
+                  <button 
+                    onClick={() => { setEditingBadge(null); setIsAddingBadge(false); }} 
+                    className="flex-1 bg-gray-300 font-black uppercase py-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+                  >
+                    Batal
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        }
+        return (
+          <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-black uppercase">Kelola Badge</h2>
+              <button 
+                onClick={() => {
+                  setEditingBadge({ id: Date.now(), title: '', image: '' });
+                  setIsAddingBadge(true);
+                }} 
+                className="bg-yellow-400 font-black border-4 border-black px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+              >
+                + Tambah Badge
+              </button>
+            </div>
+            <p className="font-bold mb-6 text-gray-700">Daftar seluruh badge pencapaian atau lencana Anda (tampil di halaman depan tanpa tombol):</p>
+            
+            {badges.length === 0 ? (
+              <div className="border-4 border-black p-8 bg-[#F4F4F5] text-center font-bold text-gray-600">
+                Belum ada badge. Klik &quot;+ Tambah Badge&quot; untuk menambahkan.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {badges.map((badge, idx) => (
+                  <div key={badge.id || idx} className="border-4 border-black p-4 bg-[#F4F4F5] flex flex-col justify-between shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+                    <div>
+                      <img src={badge.image} alt={badge.title} className="w-full h-40 object-contain border-2 border-black mb-4 bg-white p-2" />
+                      <h3 className="font-black text-lg mb-4">{badge.title || `Badge #${idx + 1}`}</h3>
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => {
+                          setIsAddingBadge(false);
+                          setEditingBadge(badge);
+                        }} 
+                        className="flex-1 px-3 py-2 font-black uppercase border-4 border-black bg-[#00FF75] hover:bg-green-300 transition-colors text-sm"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setConfirmModal({
+                            isOpen: true,
+                            title: 'Hapus Badge',
+                            message: `Apakah Anda yakin ingin menghapus badge "${badge.title || 'ini'}"?`,
+                            onConfirm: async () => {
+                              await updateBadges(badges.filter(b => b.id !== badge.id));
+                              toast.success('Badge berhasil dihapus!');
+                            }
+                          });
+                        }} 
+                        className="flex-1 px-3 py-2 font-black uppercase border-4 border-black bg-[#FF007A] text-white hover:bg-red-600 transition-colors text-sm"
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
       case 'Kelola Kontak':
         if (editingContact || isAddingContact) {
           const contactData = editingContact || {
@@ -1306,6 +1454,7 @@ export default function AdminDashboard() {
     { name: 'Kelola Proyek', icon: <FaProjectDiagram size={20} /> },
     { name: 'Kelola Keahlian', icon: <FaTools size={20} /> },
     { name: 'Kelola Sertifikat', icon: <FaAward size={20} /> },
+    { name: 'Kelola Badge', icon: <FaMedal size={20} /> },
     { name: 'Kelola Kontak', icon: <FaPhoneAlt size={20} /> },
     { name: 'Kelola Medsos', icon: <FaShareAlt size={20} /> },
     { name: 'Kelola Musik', icon: <FaMusic size={20} /> },

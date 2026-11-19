@@ -101,6 +101,16 @@ export async function saveCertificatesApi(certificates) {
   return res.json();
 }
 
+export async function saveBadgesApi(badges) {
+  const res = await fetch('/api/admin/badges', {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(badges)
+  });
+  if (!res.ok) throw new Error('Gagal memperbarui badge');
+  return res.json();
+}
+
 export async function saveContactsApi(contacts) {
   const res = await fetch('/api/admin/contacts', {
     method: 'POST',

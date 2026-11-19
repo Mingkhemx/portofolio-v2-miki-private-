@@ -11,6 +11,7 @@ export default function Navbar() {
     { name: "Highlight Proyek", href: "#projects" },
     { name: "Keahlian", href: "#skills" },
     { name: "Sertifikat", href: "#certificates" },
+    { name: "Badge", href: "#badges" },
     { name: "Github", href: "#github" },
     { name: "Kontak", href: "#contact" },
   ];
