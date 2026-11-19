@@ -198,19 +198,40 @@ export default async function handler(req, res) {
       const { username, password } = body;
 
       const inputUser = (username || '').trim().toLowerCase();
-      const adminBase = ADMIN_USERNAME.split('@')[0];
+      let matchedAdmin = null;
+      let hasDbAdmins = false;
 
-      const isMatch = (inputUser === ADMIN_USERNAME || inputUser === adminBase) && password === ADMIN_PASSWORD;
+      try {
+        const adminRows = await sql.query('SELECT id, username, password, role FROM admins');
+        if (adminRows && adminRows.length > 0) {
+          hasDbAdmins = true;
+          matchedAdmin = adminRows.find((a) => {
+            const dbUser = (a.username || '').trim().toLowerCase();
+            const dbBase = dbUser.split('@')[0];
+            return (inputUser === dbUser || inputUser === dbBase) && password === a.password;
+          });
+        }
+      } catch (err) {
+        // Jika tabel admins belum dibuat di Neon, fallback ke environment variables
+        console.warn('Tabel admins belum tersedia, fallback ke env:', err.message);
+      }
 
-      if (!isMatch) {
+      if (!hasDbAdmins) {
+        const adminBase = ADMIN_USERNAME.split('@')[0];
+        if ((inputUser === ADMIN_USERNAME || inputUser === adminBase) && password === ADMIN_PASSWORD) {
+          matchedAdmin = { username: ADMIN_USERNAME, role: 'admin' };
+        }
+      }
+
+      if (!matchedAdmin) {
         return sendJson(res, 401, { error: 'Username atau Password salah!' });
       }
 
-      const token = createToken({ username: ADMIN_USERNAME, role: 'admin' });
+      const token = createToken({ username: matchedAdmin.username, role: matchedAdmin.role || 'admin' });
       return sendJson(res, 200, {
         success: true,
         token,
-        user: { email: ADMIN_USERNAME, role: 'admin' }
+        user: { email: matchedAdmin.username, role: matchedAdmin.role || 'admin' }
       });
     }
 
