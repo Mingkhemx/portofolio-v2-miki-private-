@@ -10,11 +10,11 @@ const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || 'migwaraa@gmail.com').toLo
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'neon-portfolio-secure-key-2026';
 
-const S3_ENDPOINT = process.env.AWS_ENDPOINT_URL_S3 || 'https://br-withered-wave-a1box3ug.storage.c-1.ap-southeast-1.aws.neon.tech';
-const S3_REGION = process.env.AWS_REGION || 'ap-southeast-1';
-const S3_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
-const S3_SECRET = process.env.AWS_SECRET_ACCESS_KEY;
-const BUCKET_NAME = process.env.AWS_BUCKET_NAME || 'portofolio';
+const S3_ENDPOINT = (process.env.AWS_ENDPOINT_URL_S3 || 'https://br-withered-wave-a1box3ug.storage.c-1.ap-southeast-1.aws.neon.tech').trim().replace(/\/+$/, '');
+const S3_REGION = (process.env.AWS_REGION || 'ap-southeast-1').trim();
+const S3_KEY_ID = (process.env.AWS_ACCESS_KEY_ID || '').trim();
+const S3_SECRET = (process.env.AWS_SECRET_ACCESS_KEY || '').trim();
+const BUCKET_NAME = (process.env.AWS_BUCKET_NAME || 'portofolio').trim();
 
 function getS3Client() {
   if (!S3_KEY_ID || !S3_SECRET) return null;
@@ -25,7 +25,9 @@ function getS3Client() {
       accessKeyId: S3_KEY_ID,
       secretAccessKey: S3_SECRET
     },
-    forcePathStyle: true
+    forcePathStyle: true,
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED'
   });
 }
 
@@ -423,7 +425,7 @@ export default async function handler(req, res) {
         return sendJson(res, 500, { error: 'Kredensial S3 belum dikonfigurasi' });
       }
 
-      const matches = dataBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+      const matches = dataBase64.match(/^data:([^;]+);base64,(.+)$/);
       const pureBase64 = matches ? matches[2] : dataBase64;
       const buffer = Buffer.from(pureBase64, 'base64');
 
@@ -432,12 +434,23 @@ export default async function handler(req, res) {
       const s3Key = `${cleanFolder}/${cleanFileName}`;
       const contentType = matches ? matches[1] : getMimeType(filename);
 
-      await s3.send(new PutObjectCommand({
-        Bucket: BUCKET_NAME,
-        Key: s3Key,
-        Body: buffer,
-        ContentType: contentType
-      }));
+      try {
+        await s3.send(new PutObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: s3Key,
+          Body: buffer,
+          ContentLength: buffer.length,
+          ContentType: contentType
+        }));
+      } catch (s3Err) {
+        console.error('S3 Upload Error:', s3Err);
+        const code = s3Err?.Code || s3Err?.name || 'S3Error';
+        const status = s3Err?.$metadata?.httpStatusCode ? ` HTTP ${s3Err.$metadata.httpStatusCode}` : '';
+        return sendJson(res, 500, {
+          error: 'Gagal upload ke Neon S3',
+          details: `${code}${status}: ${s3Err.message || 'Unknown S3 error'}`
+        });
+      }
 
       const publicUrl = `${S3_ENDPOINT}/${BUCKET_NAME}/${s3Key}`;
       return sendJson(res, 200, { success: true, url: publicUrl, key: s3Key });

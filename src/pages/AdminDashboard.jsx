@@ -812,14 +812,20 @@ export default function AdminDashboard() {
                         try {
                           const url = await handleUploadImageFile(file);
                           setEditingBadge({...badgeData, image: url});
-                          toast.success('Badge berhasil diunggah!');
                         } catch (err) {
                           console.error(err);
-                          toast.error('Gagal mengunggah badge.');
                         }
                       }
                     }} 
                     className="w-full border-4 border-black p-2 file:bg-black file:text-white file:border-none file:px-4 file:py-2 file:mr-4 cursor-pointer" 
+                  />
+                  <label className="block mt-4 mb-2 text-sm text-gray-600">Atau masukkan URL Gambar Badge langsung</label>
+                  <input 
+                    type="text" 
+                    placeholder="https://..."
+                    value={badgeData.image} 
+                    onChange={e => setEditingBadge({...badgeData, image: e.target.value})} 
+                    className="w-full bg-[#F4F4F5] border-4 border-black p-3 focus:outline-none focus:bg-[#E9D5FF]" 
                   />
                   {badgeData.image && (
                     <div className="mt-4">

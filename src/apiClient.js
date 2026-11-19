@@ -175,8 +175,17 @@ export async function uploadAssetApi(file, folder = 'images') {
             folder
           })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Gagal mengunggah berkas ke Neon S3');
+        const rawText = await res.text();
+        let data = {};
+        try {
+          data = rawText ? JSON.parse(rawText) : {};
+        } catch {
+          data = { error: res.status === 413 ? 'Ukuran file terlalu besar (maksimal ~3MB)' : rawText };
+        }
+        if (!res.ok) {
+          const detailMsg = data.details ? `${data.error} (${data.details})` : (data.error || `HTTP ${res.status}`);
+          throw new Error(detailMsg || 'Gagal mengunggah berkas ke Neon S3');
+        }
         resolve(data.url);
       } catch (err) {
         reject(err);
