@@ -36,7 +36,7 @@ export default function Badges() {
                 className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col"
               >
                 <div className="p-4 bg-gray-50">
-                  <div className="w-full h-56 border-2 border-black skeleton-shimmer flex items-center justify-center">
+                  <div className="w-full aspect-[4/3] border-2 border-black skeleton-shimmer flex items-center justify-center">
                     <div className="w-8 h-8 rounded-full border-4 border-black/20 border-t-black animate-spin" />
                   </div>
                 </div>
@@ -57,8 +57,8 @@ export default function Badges() {
                     src={badge.image}
                     alt={badge.title || `Badge ${index + 1}`}
                     onClick={() => setSelectedImg(badge.image)}
-                    wrapperClassName="w-full min-h-[200px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
-                    className="w-full h-auto group-hover:scale-105 transition-transform duration-300 cursor-zoom-in"
+                    wrapperClassName="w-full aspect-[4/3] bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                    className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300 cursor-zoom-in"
                   />
                 </div>
               </div>
@@ -78,7 +78,7 @@ export default function Badges() {
           onClick={() => setSelectedImg(null)}
         >
           <div
-            className="relative max-w-4xl w-full bg-white border-8 border-black p-2 shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] animate-in zoom-in duration-300"
+            className="relative max-w-5xl max-h-[90vh] w-fit bg-white border-8 border-black p-2 shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] animate-in zoom-in duration-300 flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -91,8 +91,8 @@ export default function Badges() {
             <SkeletonImage
               src={selectedImg}
               alt="Preview Badge"
-              wrapperClassName="w-full min-h-[300px] border-4 border-black"
-              className="w-full h-auto"
+              wrapperClassName="border-4 border-black bg-white flex items-center justify-center min-w-[260px] min-h-[200px]"
+              className="max-h-[82vh] max-w-[85vw] w-auto h-auto object-contain"
             />
           </div>
         </div>
