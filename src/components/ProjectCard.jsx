@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { usePortfolioStore } from '../store/portfolioStore';
+import SkeletonImage from './SkeletonImage';
 import { 
   FaLaravel, 
   FaReact, 
@@ -34,6 +35,43 @@ const techIcons = {
   "Spring Boot": <SiSpringboot className="text-green-600" title="Spring Boot" />,
   "PostgreSQL": <SiPostgresql className="text-blue-400" title="PostgreSQL" />,
 };
+
+export function ProjectCardSkeleton({ compact = false }) {
+  return (
+    <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] h-full flex flex-col">
+      <div className="border-b-4 border-black relative">
+        <div className="bg-gray-200 py-2 px-4 border-b-2 border-black flex gap-1">
+          <div className="w-2 h-2 rounded-full bg-red-500 border border-black"></div>
+          <div className="w-2 h-2 rounded-full bg-yellow-500 border border-black"></div>
+          <div className="w-2 h-2 rounded-full bg-green-500 border border-black"></div>
+        </div>
+        <div className="w-full h-48 skeleton-shimmer flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full border-4 border-black/20 border-t-black animate-spin" />
+        </div>
+      </div>
+
+      <div className="p-6 flex-1 flex flex-col gap-4">
+        <div className="h-7 w-2/3 mx-auto skeleton-shimmer rounded border border-black/10"></div>
+        {!compact && (
+          <>
+            <div className="space-y-2 flex-1">
+              <div className="h-3.5 w-full skeleton-shimmer rounded"></div>
+              <div className="h-3.5 w-11/12 skeleton-shimmer rounded"></div>
+              <div className="h-3.5 w-4/5 skeleton-shimmer rounded"></div>
+            </div>
+            <div className="flex gap-3">
+              <div className="w-8 h-8 skeleton-shimmer rounded border border-black/10"></div>
+              <div className="w-8 h-8 skeleton-shimmer rounded border border-black/10"></div>
+              <div className="w-8 h-8 skeleton-shimmer rounded border border-black/10"></div>
+            </div>
+            <div className="h-10 w-full skeleton-shimmer border-4 border-black"></div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ProjectCard({ project, compact = false }) {
   const { skills } = usePortfolioStore();
   
@@ -46,10 +84,11 @@ export default function ProjectCard({ project, compact = false }) {
           <div className="w-2 h-2 rounded-full bg-yellow-500 border border-black"></div>
           <div className="w-2 h-2 rounded-full bg-green-500 border border-black"></div>
         </div>
-        <img 
-          src={project.image} 
-          alt={project.title} 
-          className="w-full h-48 object-cover "
+        <SkeletonImage
+          src={project.image}
+          alt={project.title}
+          wrapperClassName="w-full h-48"
+          className="w-full h-48 object-cover"
         />
       </div>
 

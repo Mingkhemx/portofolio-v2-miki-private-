@@ -30,7 +30,8 @@ const mapProjectFromDB = (p) => ({
 export const usePortfolioStore = create(
   persist(
     (set, get) => ({
-      projects: initialProjects,
+      isLoading: true,
+      projects: [],
       hero: {
         name: "Muhammad Rifki Apreliant",
         role: "Fullstack Developer & Software Engineer",
@@ -42,7 +43,7 @@ export const usePortfolioStore = create(
         description: "Sebagai lulusan terbaru dari STMIK Mardira Indonesia (S1 Teknik Informatika), saya telah mengerjakan berbagai proyek selama studi dan melalui pekerjaan freelance—mulai dari website sederhana hingga aplikasi kompleks, dan implementasi infrastruktur jaringan. Saya menikmati menggabungkan keterampilan teknis dengan pemecahan masalah kreatif untuk memberikan solusi yang efektif dan menarik.",
         location: "Bandung, Jawa Barat",
         email: "adansyah225@gmail.com",
-        image: "/syahdan-pp.jpg"
+        image: ""
       },
       highlights: ["Simbada", "AI ChatBot", "Maintenance Mobil", "Tagihan Sekolah"],
       skills: [
@@ -53,12 +54,7 @@ export const usePortfolioStore = create(
         { id: 5, name: "JS", image: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" },
         { id: 6, name: "TAILWIND", image: "https://upload.wikimedia.org/wikipedia/commons/d/d5/Tailwind_CSS_Logo.svg" }
       ],
-      certificates: [
-        { id: 1, title: "CCNA Network Fundamentals", image: "/serrtifikat/serti.png", color: "bg-blue-500" },
-        { id: 2, title: "Dasar Pemrograman JavaScript", image: "/serrtifikat/serti.png", color: "bg-purple-600" },
-        { id: 3, title: "Back-End Pemula dengan JavaScript", image: "/serrtifikat/serti.png", color: "bg-green-500" },
-        { id: 4, title: "Proyek Akhir Web Developer", image: "/serrtifikat/serti.png", color: "bg-orange-500" }
-      ],
+      certificates: [],
       contacts: [
         { id: 1, type: 'Lokasi', value: 'Kopo, Bandung, Indonesia', link: '' },
         { id: 2, type: 'Email', value: 'adansyah225@gmail.com', link: 'mailto:adansyah225@gmail.com' },
@@ -78,6 +74,7 @@ export const usePortfolioStore = create(
       ],
 
       fetchPortfolioData: async () => {
+        set({ isLoading: true });
         try {
           const data = await fetchPortfolioApi();
 
@@ -94,6 +91,11 @@ export const usePortfolioStore = create(
           });
         } catch (err) {
           console.error('Error fetching data from Neon API:', err);
+          if (get().projects.length === 0) {
+            set({ projects: initialProjects });
+          }
+        } finally {
+          set({ isLoading: false });
         }
       },
 
@@ -189,6 +191,10 @@ export const usePortfolioStore = create(
     }),
     {
       name: 'portfolio-storage',
+      partialize: (state) =>
+        Object.fromEntries(
+          Object.entries(state).filter(([key]) => key !== 'isLoading')
+        ),
     }
   )
 );

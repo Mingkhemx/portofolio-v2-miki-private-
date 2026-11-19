@@ -5,6 +5,7 @@ import 'aos/dist/aos.css';
 // React Icons
 import { FaCodeBranch, FaStar, FaUsers } from "react-icons/fa";
 import { GoGitCommit } from "react-icons/go";
+import SkeletonImage from './SkeletonImage';
 
 export default function GitHubStats() {
   const username = "Mingkhemx"; // GitHub Username Dinamis Anda
@@ -104,10 +105,11 @@ export default function GitHubStats() {
         >
           <div className="w-full flex flex-col items-center justify-center">
             <p className="font-bold text-xs uppercase mb-3 text-gray-500">Grafik Kontribusi GitHub ({username})</p>
-            <img
+            <SkeletonImage
               src={`https://ghchart.rshah.org/00FF75/${username}`}
               alt="GitHub Contribution Graph"
-              className="w-full h-auto max-w-4xl"
+              wrapperClassName="w-full max-w-4xl min-h-[120px] rounded"
+              className="w-full h-auto"
             />
           </div>
         </div>

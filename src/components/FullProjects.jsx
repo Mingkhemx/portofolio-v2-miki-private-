@@ -1,11 +1,11 @@
 import { useState } from "react";
-import ProjectCard from "./ProjectCard";
+import ProjectCard, { ProjectCardSkeleton } from "./ProjectCard";
 import { usePortfolioStore } from "../store/portfolioStore";
 
 const categories = ["Semua", "Website", "UI/UX", "Mobile App", "3D Model"];
 
 export default function FullProjects() {
-  const { projects } = usePortfolioStore();
+  const { projects, isLoading } = usePortfolioStore();
   const [activeCategory, setActiveCategory] = useState("Semua");
   const [visibleCount, setVisibleCount] = useState(3);
 
@@ -46,10 +46,16 @@ export default function FullProjects() {
           ))}
         </div>
         
-        {filteredProjects.length > 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[0, 1, 2].map((idx) => (
+              <ProjectCardSkeleton key={idx} />
+            ))}
+          </div>
+        ) : filteredProjects.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" data-aos="fade-up">
             {filteredProjects.slice(0, visibleCount).map((item, index) => (
-              <ProjectCard key={index} project={item} />
+              <ProjectCard key={item.id || index} project={item} />
             ))}
           </div>
         ) : (

@@ -3,9 +3,10 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { IoClose } from 'react-icons/io5';
 import { usePortfolioStore } from '../store/portfolioStore';
+import SkeletonImage from './SkeletonImage';
 
 export default function Certificates() {
-  const { certificates } = usePortfolioStore();
+  const { certificates, isLoading } = usePortfolioStore();
   const [selectedImg, setSelectedImg] = useState(null);
 
   useEffect(() => {
@@ -27,33 +28,54 @@ export default function Certificates() {
         </div>
 
         {/* Grid Sertifikat */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {certificates.map((cert, index) => (
-            <div 
-              key={cert.id || index}
-              data-aos="fade-up"
-              data-aos-delay={index * 100}
-              className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col group transition-all"
-            >
-              <div className="p-4 border-b-4 border-black overflow-hidden bg-gray-50">
-                <img 
-                  src={cert.image} 
-                  alt={cert.title} 
-                  className="w-full h-auto border-2 border-black group-hover:scale-105 transition-transform duration-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
-                />
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {[0, 1, 2].map((idx) => (
+              <div
+                key={idx}
+                className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col"
+              >
+                <div className="p-4 border-b-4 border-black bg-gray-50">
+                  <div className="w-full h-56 border-2 border-black skeleton-shimmer flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full border-4 border-black/20 border-t-black animate-spin" />
+                  </div>
+                </div>
+                <div className="p-4 mt-auto">
+                  <div className="w-full h-12 border-4 border-black skeleton-shimmer" />
+                </div>
               </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {certificates.map((cert, index) => (
+              <div 
+                key={cert.id || index}
+                data-aos="fade-up"
+                data-aos-delay={index * 100}
+                className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col group transition-all"
+              >
+                <div className="p-4 border-b-4 border-black overflow-hidden bg-gray-50">
+                  <SkeletonImage
+                    src={cert.image}
+                    alt={cert.title}
+                    wrapperClassName="w-full min-h-[200px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                    className="w-full h-auto group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
 
-              <div className="p-4 mt-auto">
-                <button 
-                  onClick={() => setSelectedImg(cert.image)} // Set gambar ke state saat diklik
-                  className={`w-full py-3 ${cert.color} text-white font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all`}
-                >
-                  Detail
-                </button>
+                <div className="p-4 mt-auto">
+                  <button 
+                    onClick={() => setSelectedImg(cert.image)} // Set gambar ke state saat diklik
+                    className={`w-full py-3 ${cert.color} text-white font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all`}
+                  >
+                    Detail
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* MODAL PREVIEW (Muncul jika selectedImg tidak null) */}
@@ -69,15 +91,16 @@ export default function Certificates() {
             {/* Tombol Close gaya Neobrutalism */}
             <button 
               onClick={() => setSelectedImg(null)}
-              className="absolute -top-6 -right-6 bg-[#FF007A] text-white p-2 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+              className="absolute -top-6 -right-6 bg-[#FF007A] text-white p-2 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all z-20"
             >
               <IoClose size={32} strokeWidth={3} />
             </button>
 
-            <img 
-              src={selectedImg} 
-              alt="Preview Sertifikat" 
-              className="w-full h-auto border-4 border-black"
+            <SkeletonImage
+              src={selectedImg}
+              alt="Preview Sertifikat"
+              wrapperClassName="w-full min-h-[300px] border-4 border-black"
+              className="w-full h-auto"
             />
           </div>
         </div>

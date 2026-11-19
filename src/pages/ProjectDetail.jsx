@@ -10,6 +10,7 @@ import 'swiper/css/thumbs';
 import { usePortfolioStore } from '../store/portfolioStore';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import SkeletonImage from '../components/SkeletonImage';
 import {
   FaLaravel, FaReact, FaNodeJs, FaVuejs, FaJava, FaDatabase, FaArrowLeft, FaExternalLinkAlt
 } from 'react-icons/fa';
@@ -37,7 +38,7 @@ const techIcons = {
 export default function ProjectDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { projects, skills } = usePortfolioStore();
+  const { projects, skills, isLoading } = usePortfolioStore();
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
   const [fullScreenImage, setFullScreenImage] = useState(null);
   const project = projects.find(p => p.id === id);
@@ -46,6 +47,42 @@ export default function ProjectDetail() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  if (isLoading && !project) {
+    return (
+      <div className="min-h-screen bg-[#F4F4F5] flex flex-col font-sans">
+        <Navbar />
+        <div className="bg-[#F4AE52] border-b-4 border-black pt-24 pb-10 px-6">
+          <div className="max-w-6xl mx-auto space-y-4">
+            <div className="h-10 w-32 bg-white border-4 border-black skeleton-shimmer" />
+            <div className="h-7 w-28 skeleton-shimmer border-2 border-black" />
+            <div className="h-14 w-2/3 skeleton-shimmer border-2 border-black" />
+          </div>
+        </div>
+        <div className="flex-1 max-w-6xl mx-auto w-full px-6 py-12 grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden h-96">
+            <div className="bg-gray-200 py-2 px-4 border-b-4 border-black flex gap-1">
+              <div className="w-3 h-3 rounded-full bg-red-500 border border-black"></div>
+              <div className="w-3 h-3 rounded-full bg-yellow-500 border border-black"></div>
+              <div className="w-3 h-3 rounded-full bg-green-500 border border-black"></div>
+            </div>
+            <div className="w-full h-full skeleton-shimmer flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full border-4 border-black/20 border-t-black animate-spin" />
+            </div>
+          </div>
+          <div className="flex flex-col gap-6">
+            <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-3">
+              <div className="h-7 w-1/2 skeleton-shimmer" />
+              <div className="h-4 w-full skeleton-shimmer" />
+              <div className="h-4 w-11/12 skeleton-shimmer" />
+              <div className="h-4 w-4/5 skeleton-shimmer" />
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!project) {
     return (
@@ -142,9 +179,10 @@ export default function ProjectDetail() {
                 >
                   {project.images.map((imgUrl, idx) => (
                     <SwiperSlide key={idx}>
-                      <img
+                      <SkeletonImage
                         src={imgUrl}
                         alt={`${project.title} screenshot ${idx + 1}`}
+                        wrapperClassName="w-full min-h-[260px]"
                         className="w-full object-cover cursor-zoom-in"
                         onClick={() => setFullScreenImage(imgUrl)}
                       />
@@ -163,19 +201,21 @@ export default function ProjectDetail() {
                 >
                   {project.images.map((imgUrl, idx) => (
                     <SwiperSlide key={`thumb-${idx}`} className="cursor-pointer opacity-50 hover:opacity-100 transition-opacity [&.swiper-slide-thumb-active]:opacity-100 [&.swiper-slide-thumb-active]:border-2 [&.swiper-slide-thumb-active]:border-[#00FF75]">
-                      <img
+                      <SkeletonImage
                         src={imgUrl}
                         alt={`thumbnail ${idx + 1}`}
-                        className="w-full h-20 object-cover border-2 border-black"
+                        wrapperClassName="w-full h-20 border-2 border-black"
+                        className="w-full h-20 object-cover"
                       />
                     </SwiperSlide>
                   ))}
                 </Swiper>
               </div>
             ) : (
-              <img
+              <SkeletonImage
                 src={project.image}
                 alt={project.title}
+                wrapperClassName="w-full min-h-[260px]"
                 className="w-full object-cover cursor-zoom-in"
                 onClick={() => setFullScreenImage(project.image)}
               />

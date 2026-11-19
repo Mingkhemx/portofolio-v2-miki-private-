@@ -1,6 +1,6 @@
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination, EffectCoverflow } from 'swiper/modules';
-import ProjectCard from "./ProjectCard";
+import ProjectCard, { ProjectCardSkeleton } from "./ProjectCard";
 import { usePortfolioStore } from "../store/portfolioStore";
 
 // Import Swiper styles
@@ -10,7 +10,7 @@ import 'swiper/css/pagination';
 import 'swiper/css/effect-coverflow';
 
 export default function Projects() {
-  const { highlights, projects } = usePortfolioStore();
+  const { highlights, projects, isLoading } = usePortfolioStore();
   const highlightedProjects = projects.filter(p => highlights.includes(p.title));
 
   return (
@@ -23,43 +23,51 @@ export default function Projects() {
           </h2>
         </div>
 
-        <Swiper
-          modules={[Autoplay, Pagination, EffectCoverflow]}
-          effect={'coverflow'} // Menambahkan efek kedalaman
-          grabCursor={true}
-          centeredSlides={true}
-          slidesPerView={'auto'}
-          loop={true}
-          speed={600} // Kecepatan animasi dalam milidetik
-          autoplay={{
-            delay: 2500,
-            disableOnInteraction: false,
-          }}
-          coverflowEffect={{
-            rotate: 0,
-            stretch: 0,
-            depth: 100,
-            modifier: 2.5,
-            slideShadows: false,
-          }}
-          breakpoints={{
-            320: { slidesPerView: 1, spaceBetween: 20 },
-            768: { slidesPerView: 2, spaceBetween: 30 },
-            1024: { slidesPerView: 3, spaceBetween: 40 },
-          }}
-          className="!pb-20"
-          data-aos="fade-up"
-        >
-          {highlightedProjects.map((item, index) => (
-            <SwiperSlide key={index} className="transition-transform duration-300">
-              {({ isActive }) => (
-                <div className={`${isActive ? 'scale-105' : 'scale-90 opacity-60'} transition-all duration-500 h-full`}>
-                   <ProjectCard project={item} compact={true} />
-                </div>
-              )}
-            </SwiperSlide>
-          ))}
-        </Swiper>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
+            {[0, 1, 2].map((idx) => (
+              <ProjectCardSkeleton key={idx} compact={true} />
+            ))}
+          </div>
+        ) : (
+          <Swiper
+            modules={[Autoplay, Pagination, EffectCoverflow]}
+            effect={'coverflow'} // Menambahkan efek kedalaman
+            grabCursor={true}
+            centeredSlides={true}
+            slidesPerView={'auto'}
+            loop={highlightedProjects.length > 2}
+            speed={600} // Kecepatan animasi dalam milidetik
+            autoplay={{
+              delay: 2500,
+              disableOnInteraction: false,
+            }}
+            coverflowEffect={{
+              rotate: 0,
+              stretch: 0,
+              depth: 100,
+              modifier: 2.5,
+              slideShadows: false,
+            }}
+            breakpoints={{
+              320: { slidesPerView: 1, spaceBetween: 20 },
+              768: { slidesPerView: 2, spaceBetween: 30 },
+              1024: { slidesPerView: 3, spaceBetween: 40 },
+            }}
+            className="!pb-20"
+            data-aos="fade-up"
+          >
+            {highlightedProjects.map((item, index) => (
+              <SwiperSlide key={item.id || index} className="transition-transform duration-300">
+                {({ isActive }) => (
+                  <div className={`${isActive ? 'scale-105' : 'scale-90 opacity-60'} transition-all duration-500 h-full`}>
+                     <ProjectCard project={item} compact={true} />
+                  </div>
+                )}
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        )}
       </div>
     </section>
   );
