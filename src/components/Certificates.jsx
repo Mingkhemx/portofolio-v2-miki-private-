@@ -8,6 +8,11 @@ import SkeletonImage from './SkeletonImage';
 export default function Certificates() {
   const { certificates, isLoading } = usePortfolioStore();
   const [selectedImg, setSelectedImg] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(6);
+
+  const showMoreCertificates = () => {
+    setVisibleCount((prevCount) => prevCount + 6);
+  };
 
   useEffect(() => {
     AOS.init({
@@ -47,34 +52,47 @@ export default function Certificates() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {certificates.map((cert, index) => (
-              <div 
-                key={cert.id || index}
-                data-aos="fade-up"
-                data-aos-delay={index * 100}
-                className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col group transition-all"
-              >
-                <div className="p-4 border-b-4 border-black overflow-hidden bg-gray-50">
-                  <SkeletonImage
-                    src={cert.image}
-                    alt={cert.title}
-                    wrapperClassName="w-full aspect-[4/3] bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
-                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              {certificates.slice(0, visibleCount).map((cert, index) => (
+                <div 
+                  key={cert.id || index}
+                  data-aos="fade-up"
+                  data-aos-delay={(index % 6) * 100}
+                  className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col group transition-all"
+                >
+                  <div className="p-4 border-b-4 border-black overflow-hidden bg-gray-50">
+                    <SkeletonImage
+                      src={cert.image}
+                      alt={cert.title}
+                      wrapperClassName="w-full aspect-[4/3] bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                      className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
 
-                <div className="p-4 mt-auto">
-                  <button 
-                    onClick={() => setSelectedImg(cert.image)} // Set gambar ke state saat diklik
-                    className={`w-full py-3 ${cert.color} text-white font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all`}
-                  >
-                    Detail
-                  </button>
+                  <div className="p-4 mt-auto">
+                    <button 
+                      onClick={() => setSelectedImg(cert.image)} // Set gambar ke state saat diklik
+                      className={`w-full py-3 ${cert.color} text-white font-black uppercase border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all`}
+                    >
+                      Detail
+                    </button>
+                  </div>
                 </div>
+              ))}
+            </div>
+
+            {visibleCount < certificates.length && (
+              <div className="flex justify-center mt-12" data-aos="fade-up">
+                <button
+                  onClick={showMoreCertificates}
+                  className="bg-yellow-400 font-black text-xl px-8 py-4 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] active:bg-white transition-all uppercase"
+                >
+                  Lihat Lebih Banyak
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
 
